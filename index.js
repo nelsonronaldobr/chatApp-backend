@@ -34,7 +34,8 @@ const corsOptions = {
 };
 
 app.use('/public', express.static('public'));
-app.use(cors(corsOptions));
+/* app.use(cors(corsOptions)); */
+app.use(cors());
 
 app.use(express.json());
 
@@ -78,19 +79,25 @@ io.on('connection', (socket) => {
         try {
             socket.join(conversation._id);
 
-            socket.to(`notifications-${receiver}`).emit('joinConversation', {
-                conversationId: conversation._id
-            });
-            socket
+            io.sockets
+                .in(`notifications-${receiver}`)
+                .socketsJoin(conversation._id);
+
+            /*  socket
                 .to(`notifications-${receiver}`)
                 .emit('newConversationNotification', {
                     ...conversation
-                });
+                }); */
 
-            socket.to(conversation._id.toString()).emit('newMessage', {
+            io.sockets.in(conversation._id.toString()).emit('newMessage', {
                 newMessage: { ...conversation.lastMessage },
                 newConversation: { ...conversation }
             });
+
+            /* socket.to(conversation._id.toString()).emit('newMessage', {
+                newMessage: { ...conversation.lastMessage },
+                newConversation: { ...conversation }
+            }); */
         } catch (error) {
             console.error(
                 'Error al enviar notificación de inicio de conversación:',
@@ -105,7 +112,7 @@ io.on('connection', (socket) => {
                 receiverId: receiver,
                 content
             });
-            socket.to(message.conversation.toString()).emit('newMessage', {
+            io.sockets.in(message.conversation.toString()).emit('newMessage', {
                 newMessage: { ...message.toObject() },
                 newConversation: { ...conversation.toObject() }
             });

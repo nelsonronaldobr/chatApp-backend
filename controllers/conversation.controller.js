@@ -35,7 +35,19 @@ const sendMessage = async ({ senderId, receiverId, content }) => {
         [conversation, message] = await Promise.all([
             Conversation.findById(conversation._id)
                 .populate('participants', 'username name email avatar')
-                .populate('lastMessage')
+                .populate({
+                    path: 'lastMessage',
+                    populate: [
+                        {
+                            path: 'sender',
+                            select: 'username name email avatar'
+                        },
+                        {
+                            path: 'receiver',
+                            select: 'username name email avatar'
+                        }
+                    ]
+                })
                 .exec(),
             Message.findById(message._id)
                 .populate('sender receiver', 'username name email avatar')
