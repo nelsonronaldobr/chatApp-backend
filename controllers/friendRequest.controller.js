@@ -212,7 +212,7 @@ const startGetSocial = async (req = request, res = response) => {
         const currentUser = await User.findById(id)
             .populate({
                 path: 'friends',
-                select: 'name username email bio'
+                select: 'name username email bio createdAt avatar'
             })
             .populate('friendRequestsReceived friendRequestsSent')
 
@@ -252,7 +252,7 @@ const startGetFriends = async (req = request, res = response) => {
         const currentUser = await User.findById(id)
             .populate({
                 path: 'friends.friend friends.friendRequest',
-                select: 'name username email createdAt status bio'
+                select: 'name username email createdAt status bio avatar'
             })
             .lean();
         if (!currentUser) {
@@ -287,7 +287,7 @@ const startGetFriendRequestsReceived = async (
             match: { status: 'pending' },
             populate: {
                 path: 'sender receiver',
-                select: 'name username email createdAt'
+                select: 'name username email createdAt bio avatar'
             }
         });
 
@@ -318,7 +318,7 @@ const startGetFriendRequestsSent = async (req = request, res = response) => {
             path: 'friendRequestsSent',
             populate: {
                 path: 'sender receiver',
-                select: 'name username email createdAt'
+                select: 'name username email createdAt bio avatar'
             }
         });
 
