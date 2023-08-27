@@ -34,11 +34,11 @@ const sendMessage = async ({ senderId, receiverId, content }) => {
 
         [conversation, message] = await Promise.all([
             Conversation.findById(conversation._id)
-                .populate('participants', 'username name email')
+                .populate('participants', 'username name email avatar')
                 .populate('lastMessage')
                 .exec(),
             Message.findById(message._id)
-                .populate('sender receiver', 'username name email')
+                .populate('sender receiver', 'username name email avatar')
                 .exec()
         ]);
 
@@ -86,7 +86,7 @@ const sendStartMessage = async ({ senderId, receiverId }) => {
 
         // Cargar las referencias completas de la conversación y el mensaje
         conversation = await Conversation.findById(conversation._id)
-            .populate('participants', 'username name email') // O cualquier campo del usuario que quieras mostrar
+            .populate('participants', 'username name email avatar') // O cualquier campo del usuario que quieras mostrar
             .populate('lastMessage') // Si deseas mostrar también el último mensaje
             .exec();
 
@@ -175,8 +175,8 @@ const startGetConversationById = async (req = request, res = response) => {
             .populate({
                 path: 'lastMessage',
                 populate: [
-                    { path: 'sender', select: 'username name email' },
-                    { path: 'receiver', select: 'username name email' }
+                    { path: 'sender', select: 'username name email avatar' },
+                    { path: 'receiver', select: 'username name email avatar' }
                 ]
             })
             .exec();
@@ -249,7 +249,7 @@ const startSendStartMessage = async (req = request, res = response) => {
 
         // Cargar las referencias completas de la conversación y el mensaje
         conversation = await Conversation.findById(conversation._id)
-            .populate('participants', 'username name email') // O cualquier campo del usuario que quieras mostrar
+            .populate('participants', 'username name email avatar') // O cualquier campo del usuario que quieras mostrar
             .populate('lastMessage') // Si deseas mostrar también el último mensaje
             .exec();
         return res.status(200).json({
