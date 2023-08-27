@@ -34,8 +34,7 @@ const corsOptions = {
 };
 
 app.use('/public', express.static('public'));
-/* app.use(cors(corsOptions)); */
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
