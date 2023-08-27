@@ -20,7 +20,21 @@ dotenv.config();
 connectDB();
 
 const { PORT, FRONTEND_URL } = getEnvVariables();
-app.use(cors());
+
+const whiteList = [FRONTEND_URL];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (whiteList.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Error de Cors'));
+        }
+    }
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 app.use('/public', express.static('public'));
