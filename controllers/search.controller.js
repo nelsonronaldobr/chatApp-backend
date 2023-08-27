@@ -30,7 +30,8 @@ const startSearchUsers = async (req = request, res = response, next) => {
                     username: 1,
                     email: 1,
                     bio: 1,
-                    createdAt: 1
+                    createdAt: 1,
+                    avatar: 1
                     // Agrega otros campos que quieras incluir aquí
                 }
             }
