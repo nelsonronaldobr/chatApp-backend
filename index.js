@@ -33,11 +33,10 @@ const corsOptions = {
     }
 };
 
+app.use('/public', express.static('public'));
 app.use(cors(corsOptions));
 
 app.use(express.json());
-
-app.use('/public', express.static('public'));
 
 /* AUTHENTICATE */
 app.use('/api/auth', authRouter);
