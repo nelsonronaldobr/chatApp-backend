@@ -24,7 +24,8 @@ const userSchema = new Schema(
             unique: true
         },
         avatar: {
-            type: String
+            type: String,
+            default: 'https://chat-app-qvaw.onrender.com/public/default.png'
         },
         conversations: [
             {
