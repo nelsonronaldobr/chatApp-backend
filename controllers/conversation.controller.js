@@ -109,7 +109,7 @@ const startGetConversationsLastMessage = async (
         const userConversations = await Conversation.find({
             participants: userId
         })
-            .populate('participants', 'username name email')
+            .populate('participants', 'username name email avatar')
             .populate({
                 path: 'lastMessage',
                 populate: [
