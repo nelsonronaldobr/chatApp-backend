@@ -113,8 +113,8 @@ const startGetConversationsLastMessage = async (
             .populate({
                 path: 'lastMessage',
                 populate: [
-                    { path: 'sender', select: 'username name email' },
-                    { path: 'receiver', select: 'username name email' }
+                    { path: 'sender', select: 'username name email avatar' },
+                    { path: 'receiver', select: 'username name email avatar' }
                 ]
             })
             .exec();
@@ -155,12 +155,21 @@ const startGetConversationById = async (req = request, res = response) => {
 
     try {
         const conversation = await Conversation.findById(conversationId)
-            .populate('participants', 'username name email _id createdAt')
+            .populate(
+                'participants',
+                'username name email _id createdAt bio avatar'
+            )
             .populate({
                 path: 'messages',
                 populate: [
-                    { path: 'sender', select: 'username name email' },
-                    { path: 'receiver', select: 'username name email' }
+                    {
+                        path: 'sender',
+                        select: 'username name email createdAt bio avatar'
+                    },
+                    {
+                        path: 'receiver',
+                        select: 'username name email createdAt bio avatar'
+                    }
                 ]
             })
             .populate({
