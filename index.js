@@ -74,30 +74,34 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('sendStartConversation', ({ conversation, receiver }) => {
+    socket.on('sendStartConversation', async ({ sender, receiver }) => {
+        // Emitir una respuesta al cliente
+        io.sockets
+            .in(`notifications-${sender}`)
+            .emit('startConversationResponse', { success: true });
         try {
-            socket.join(conversation._id);
+            const { message, conversation } = await sendStartMessage({
+                senderId: sender,
+                receiverId: receiver
+            });
+            socket.join(conversation._id.toString());
 
             io.sockets
                 .in(`notifications-${receiver}`)
-                .socketsJoin(conversation._id);
+                .socketsJoin(conversation._id.toString());
 
-            /*  socket
-                .to(`notifications-${receiver}`)
-                .emit('newConversationNotification', {
-                    ...conversation
-                }); */
-
-            io.sockets.in(conversation._id.toString()).emit('newMessage', {
-                newMessage: { ...conversation.lastMessage },
-                newConversation: { ...conversation }
+            io.sockets.in(message.conversation.toString()).emit('newMessage', {
+                newMessage: { ...message.toObject() },
+                newConversation: { ...conversation.toObject() }
             });
 
-            /* socket.to(conversation._id.toString()).emit('newMessage', {
-                newMessage: { ...conversation.lastMessage },
-                newConversation: { ...conversation }
-            }); */
+            io.sockets
+                .in(`notifications-${sender}`)
+                .emit('startConversationResponse');
         } catch (error) {
+            io.sockets
+                .in(`notifications-${sender}`)
+                .emit('startConversationResponse');
             console.error(
                 'Error al enviar notificación de inicio de conversación:',
                 error
@@ -115,7 +119,13 @@ io.on('connection', (socket) => {
                 newMessage: { ...message.toObject() },
                 newConversation: { ...conversation.toObject() }
             });
+            io.sockets
+                .in(`notifications-${sender}`)
+                .emit('sendMessageResponse');
         } catch (error) {
+            io.sockets
+                .in(`notifications-${sender}`)
+                .emit('sendMessageResponse');
             console.error(
                 'Error al enviar notificación de inicio de conversación:',
                 error

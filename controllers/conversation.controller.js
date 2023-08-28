@@ -82,27 +82,45 @@ const sendStartMessage = async ({ senderId, receiverId }) => {
         }
 
         // Crear el mensaje
-        const message = await Message.create({
+        let message = await Message.create({
             conversation: conversation._id,
             sender: senderId,
             receiver: receiverId,
             content: 'Hola 👋'
         });
 
-        // Agregar el mensaje a la conversación
         conversation.messages.push(message._id);
 
         // Actualizar el último mensaje en la conversación
         conversation.lastMessage = message._id;
         await conversation.save();
 
-        // Cargar las referencias completas de la conversación y el mensaje
-        conversation = await Conversation.findById(conversation._id)
-            .populate('participants', 'username name email avatar') // O cualquier campo del usuario que quieras mostrar
-            .populate('lastMessage') // Si deseas mostrar también el último mensaje
-            .exec();
+        [conversation, message] = await Promise.all([
+            Conversation.findById(conversation._id)
+                .populate('participants', 'username name email avatar')
+                .populate({
+                    path: 'lastMessage',
+                    populate: [
+                        {
+                            path: 'sender',
+                            select: 'username name email avatar'
+                        },
+                        {
+                            path: 'receiver',
+                            select: 'username name email avatar'
+                        }
+                    ]
+                })
+                .exec(),
+            Message.findById(message._id)
+                .populate('sender receiver', 'username name email avatar')
+                .exec()
+        ]);
 
-        return conversation;
+        return {
+            conversation,
+            message
+        };
     } catch (error) {
         console.log(error);
         console.error(
