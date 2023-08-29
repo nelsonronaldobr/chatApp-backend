@@ -76,23 +76,23 @@ io.on('connection', (socket) => {
 
     socket.on('sendStartConversation', async ({ sender, receiver }) => {
         // Emitir una respuesta al cliente
-        io.sockets
-            .in(`notifications-${sender}`)
-            .emit('startConversationResponse', { success: true });
+
         try {
             const { message, conversation } = await sendStartMessage({
                 senderId: sender,
                 receiverId: receiver
             });
-            socket.join(conversation._id.toString());
+            socket.join(message.conversation.toString());
 
             io.sockets
                 .in(`notifications-${receiver}`)
-                .socketsJoin(conversation._id.toString());
+                .socketsJoin(message.conversation.toString());
 
             io.sockets.in(message.conversation.toString()).emit('newMessage', {
                 newMessage: { ...message.toObject() },
-                newConversation: { ...conversation.toObject() }
+                newConversation: conversation
+                    ? { ...conversation.toObject() }
+                    : undefined
             });
 
             io.sockets
@@ -110,22 +110,15 @@ io.on('connection', (socket) => {
     });
     socket.on('sendMessage', async ({ sender, receiver, content }) => {
         try {
-            const { message, conversation } = await sendMessage({
+            const { message } = await sendMessage({
                 senderId: sender,
                 receiverId: receiver,
                 content
             });
             io.sockets.in(message.conversation.toString()).emit('newMessage', {
-                newMessage: { ...message.toObject() },
-                newConversation: { ...conversation.toObject() }
+                newMessage: { ...message.toObject() }
             });
-            io.sockets
-                .in(`notifications-${sender}`)
-                .emit('sendMessageResponse');
         } catch (error) {
-            io.sockets
-                .in(`notifications-${sender}`)
-                .emit('sendMessageResponse');
             console.error(
                 'Error al enviar notificación de inicio de conversación:',
                 error

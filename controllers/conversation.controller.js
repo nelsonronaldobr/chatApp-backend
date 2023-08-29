@@ -30,32 +30,15 @@ const sendMessage = async ({ senderId, receiverId, content }) => {
 
         // Actualizar el último mensaje en la conversación
         conversation.lastMessage = message._id;
-        await conversation.save();
 
-        [conversation, message] = await Promise.all([
-            Conversation.findById(conversation._id)
-                .populate('participants', 'username name email avatar')
-                .populate({
-                    path: 'lastMessage',
-                    populate: [
-                        {
-                            path: 'sender',
-                            select: 'username name email avatar'
-                        },
-                        {
-                            path: 'receiver',
-                            select: 'username name email avatar'
-                        }
-                    ]
-                })
-                .exec(),
+        [message] = await Promise.all([
             Message.findById(message._id)
                 .populate('sender receiver', 'username name email avatar')
-                .exec()
+                .exec(),
+            conversation.save()
         ]);
 
         return {
-            conversation,
             message
         };
     } catch (error) {
@@ -79,26 +62,21 @@ const sendStartMessage = async ({ senderId, receiverId }) => {
             conversation = await Conversation.create({
                 participants: [senderId, receiverId]
             });
-        }
+            // Crear el mensaje
+            let message = await Message.create({
+                conversation: conversation._id,
+                sender: senderId,
+                receiver: receiverId,
+                content: 'Hola 👋'
+            });
 
-        // Crear el mensaje
-        let message = await Message.create({
-            conversation: conversation._id,
-            sender: senderId,
-            receiver: receiverId,
-            content: 'Hola 👋'
-        });
+            conversation.messages.push(message._id);
 
-        conversation.messages.push(message._id);
-
-        // Actualizar el último mensaje en la conversación
-        conversation.lastMessage = message._id;
-        await conversation.save();
-
-        [conversation, message] = await Promise.all([
-            Conversation.findById(conversation._id)
-                .populate('participants', 'username name email avatar')
-                .populate({
+            // Actualizar el último mensaje en la conversación
+            conversation.lastMessage = message._id;
+            await conversation.save();
+            [conversation] = await Promise.all([
+                Conversation.findById(conversation._id).populate({
                     path: 'lastMessage',
                     populate: [
                         {
@@ -111,16 +89,39 @@ const sendStartMessage = async ({ senderId, receiverId }) => {
                         }
                     ]
                 })
-                .exec(),
-            Message.findById(message._id)
-                .populate('sender receiver', 'username name email avatar')
-                .exec()
-        ]);
+            ]);
 
-        return {
-            conversation,
-            message
-        };
+            return {
+                conversation,
+                message: conversation.lastMessage
+            };
+        } else {
+            // Crear el mensaje
+            let message = await Message.create({
+                conversation: conversation._id,
+                sender: senderId,
+                receiver: receiverId,
+                content: 'Hola 👋'
+            });
+
+            conversation.messages.push(message._id);
+
+            // Actualizar el último mensaje en la conversación
+            conversation.lastMessage = message._id;
+            await conversation.save();
+
+            [message] = await Promise.all([
+                Message.findById(message._id)
+                    .populate('sender receiver', 'username name email avatar')
+                    .exec(),
+                conversation.save()
+            ]);
+
+            return {
+                message,
+                conversation: undefined
+            };
+        }
     } catch (error) {
         console.log(error);
         console.error(
